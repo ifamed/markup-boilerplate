@@ -1,0 +1,14 @@
+// General
+@import "general/variables";
+@import "general/mixins";
+@import "general/fonts";
+@import "general/base";
+
+// Vendors
+
+// Components
+@import "components/header";
+@import "components/footer";
+
+// Helpers
+@import "helpers/animations";
