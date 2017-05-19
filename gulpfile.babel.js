@@ -36,14 +36,14 @@ const paths = {
 	src: {
 		html: `${dirs.src}/*.html`,
 		javascripts: `${dirs.src}/assets/javascripts/main.js`,
-		stylesheets: `${dirs.src}/assets/stylesheets/main.(sass|scss)`,
+		stylesheets: `${dirs.src}/assets/stylesheets/main.scss`,
 		images: `${dirs.src}/assets/images/**/*.*`,
 		fonts: `${dirs.src}/assets/fonts/**/*.*`
 	},
 	watch: {
 		html: `${dirs.src}/**/*.html`,
 		javascripts: `${dirs.src}/assets/javascripts/**/*.js`,
-		stylesheets: `${dirs.src}/assets/stylesheets/**/*.(sass|scss)`,
+		stylesheets: `${dirs.src}/assets/stylesheets/**/*.scss`,
 		images: `${dirs.src}/assets/images/**/*.*`,
 		fonts: `${dirs.src}/assets/fonts/**/*.*`
 	},
@@ -84,7 +84,7 @@ gulp.task('html:build', () => {
 })
 
 // Javascripts
-gulp.task('js:build', () => {
+gulp.task('javascripts:build', () => {
 	gulp.src(paths.src.javascripts)
 		.pipe(rigger())
 		.pipe(sourcemaps.init())
@@ -95,7 +95,7 @@ gulp.task('js:build', () => {
 })
 
 // Stylesheets
-gulp.task('style:build', () => {
+gulp.task('stylesheets:build', () => {
 	gulp.src(paths.src.stylesheets)
 		.pipe(sourcemaps.init())
 		.pipe(sass({
@@ -110,7 +110,7 @@ gulp.task('style:build', () => {
 })
 
 // Images
-gulp.task('image:build', () => {
+gulp.task('images:build', () => {
 	gulp.src(paths.src.images)
 		.pipe(imagemin({
 			progressive: true,
@@ -131,10 +131,10 @@ gulp.task('fonts:build', () => {
 // Build
 gulp.task('build', [
 	'html:build',
-	'js:build',
-	'style:build',
+	'javascripts:build',
+	'stylesheets:build',
 	'fonts:build',
-	'image:build'
+	'images:build'
 ])
 
 // Source watchers
@@ -143,13 +143,13 @@ gulp.task('watch', () => {
 		gulp.start('html:build')
 	})
 	watch([paths.watch.stylesheets], (event, cb) => {
-		gulp.start('style:build')
+		gulp.start('stylesheets:build')
 	})
 	watch([paths.watch.javascripts], (event, cb) => {
-		gulp.start('js:build')
+		gulp.start('javascripts:build')
 	})
 	watch([paths.watch.images], (event, cb) => {
-		gulp.start('image:build')
+		gulp.start('images:build')
 	})
 	watch([paths.watch.fonts], (event, cb) => {
 		gulp.start('fonts:build')
