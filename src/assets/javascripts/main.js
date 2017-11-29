@@ -1,2 +1,2 @@
-//= ../../../bower_components/jquery/dist/jquery.js
+//= ../../../node_modules/jquery/dist/jquery.min.js
 //= custom.js
