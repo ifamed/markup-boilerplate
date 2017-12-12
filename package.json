@@ -15,6 +15,7 @@
 		"gulp-postcss": "^7.0.0",
 		"gulp-rigger": "^0.5.8",
 		"gulp-sass": "^3.1.0",
+		"gulp-size": "^2.1.0",
 		"gulp-sourcemaps": "^2.6.1",
 		"gulp-svgmin": "^1.2.4",
 		"gulp-tinypng-nokey": "^1.1.0",

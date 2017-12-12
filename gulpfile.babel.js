@@ -15,6 +15,7 @@ import postCSS from 'gulp-postcss'
 import _if from 'gulp-if'
 import svgmin from 'gulp-svgmin'
 import htmlmin from 'gulp-htmlmin'
+import size from 'gulp-size'
 
 
 const reload = browserSync.reload
@@ -168,6 +169,7 @@ gulp.task('html:build', () => {
 	gulp.src(paths.src.html)
 		.pipe(rigger())
 		.pipe(_if(isProduction, htmlmin(plugins.htmlmin)))
+		.pipe(size({showFiles: true}))
 		.pipe(gulp.dest(paths.dest.html))
 		.pipe(reload({stream: true}))
 })
@@ -179,6 +181,7 @@ gulp.task('js:build', () => {
 		.pipe(_if(!isProduction, sourcemaps.init()))
 		.pipe(_if(isProduction, uglify(plugins.uglify)))
 		.pipe(_if(!isProduction, sourcemaps.write()))
+		.pipe(size({showFiles: true}))
 		.pipe(gulp.dest(paths.dest.js))
 		.pipe(reload({stream: true}))
 })
@@ -190,6 +193,7 @@ gulp.task('styles:build', () => {
 		.pipe(sass(plugins.sass))
 		.pipe(_if(isProduction, postCSS(plugins.postCSS)))
 		.pipe(_if(!isProduction, sourcemaps.write()))
+		.pipe(size({showFiles: true}))
 		.pipe(gulp.dest(paths.dest.styles))
 		.pipe(reload({stream: true}))
 })
