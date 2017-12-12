@@ -14,6 +14,8 @@ import cssnano from 'cssnano'
 import postCSS from 'gulp-postcss'
 import _if from 'gulp-if'
 import svgmin from 'gulp-svgmin'
+import htmlmin from 'gulp-htmlmin'
+
 
 const reload = browserSync.reload
 
@@ -38,7 +40,7 @@ const paths = {
 		fonts: `${dirs.dest}/assets/fonts/`
 	},
 	src: {
-		html: `${dirs.src}/*.html`,
+		html: `${dirs.src}/**/*.html`,
 		javascripts: `${dirs.src}/assets/javascripts/main.js`,
 		stylesheets: `${dirs.src}/assets/stylesheets/main.scss`,
 		images: {
@@ -87,6 +89,7 @@ gulp.task('clean', (cb) => {
 gulp.task('html:build', () => {
 	gulp.src(paths.src.html)
 		.pipe(rigger())
+		.pipe(_if(isProduction, htmlmin({collapseWhitespace: true})))
 		.pipe(gulp.dest(paths.dest.html))
 		.pipe(reload({stream: true}))
 })
