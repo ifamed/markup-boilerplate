@@ -13,6 +13,7 @@ import autoprefixer from 'autoprefixer'
 import cssnano from 'cssnano'
 import postCSS from 'gulp-postcss'
 import _if from 'gulp-if'
+import svgmin from 'gulp-svgmin'
 
 const reload = browserSync.reload
 
@@ -40,7 +41,11 @@ const paths = {
 		html: `${dirs.src}/*.html`,
 		javascripts: `${dirs.src}/assets/javascripts/main.js`,
 		stylesheets: `${dirs.src}/assets/stylesheets/main.scss`,
-		images: `${dirs.src}/assets/images/**/*.*`,
+		images: {
+			all: `${dirs.src}/assets/images/**/*.*`,
+			svg: `${dirs.src}/assets/images/**/*.svg`,
+			basic: `${dirs.src}/assets/images/**/*.{jpg,jpeg,png}`
+		},
 		fonts: `${dirs.src}/assets/fonts/**/*.*`
 	},
 	watch: {
@@ -136,25 +141,60 @@ gulp.task('stylesheets:build', () => {
 		.pipe(reload({stream: true}))
 })
 
-// Images (local optimization)
-// gulp.task('images:build', () => {
-// 	gulp.src(paths.src.images)
-// 		.pipe(imagemin([
-// 			imagemin.gifsicle({interlaced: true}),
-// 			imagemin.jpegtran({progressive: true}),
-// 			imagemin.optipng({optimizationLevel: 7}),
-// 			imagemin.svgo({plugins: [{removeViewBox: false}]})
-// 		]))
-// 		.pipe(gulp.dest(paths.dest.images))
-// 		.pipe(reload({stream: true}))
-// })
+// Images: SVG
+gulp.task('images:svg', () => {
+	return gulp.src(paths.src.images.svg)
+		.pipe(_if(isProduction, svgmin({
+			plugins: [
+				{removeDoctype: true},
+				{removeComments: true},
+				{removeXMLProcInst: true},
+				{removeMetadata: true},
+				{removeTitle: true},
+				{removeHiddenElems: true},
+				{removeEmptyText: true},
+				{removeViewBox: true},
+				{convertStyleToAttrs: true},
+				{minifyStyles: true},
+				{cleanupIDs: true},
+				{removeRasterImages: true},
+				{removeUselessDefs: true},
+				{cleanupListOfValues: true},
+				{cleanupNumericValues: true},
+				{convertColors: true},
+				{removeUnknownsAndDefaults: true},
+				{removeNonInheritableGroupAttrs: true},
+				{removeUselessStrokeAndFill: true},
+				{cleanupEnableBackground: true},
+				{convertShapeToPath: true},
+				{moveElemsAttrsToGroup: true},
+				{moveGroupAttrsToElems: true},
+				{collapseGroups: true},
+				{convertPathData: true},
+				{convertTransform: true},
+				{removeEmptyAttrs: true},
+				{removeEmptyContainers: true},
+				{mergePaths: true},
+				{removeUnusedNS: true},
+				{sortAttrs: true},
+				{removeDesc: true},
+				{removeDimensions: true},
+				{removeStyleElement: true},
+				{removeScriptElement: true},
+			]
+		})))
+		.pipe(gulp.dest(paths.dest.images))
+})
 
-// Images (remote optimization)
-gulp.task('images:build', () => {
-	return gulp.src(paths.src.images)
+// Images: JPG, JPEG, PNG
+gulp.task('images:basic', () => {
+	return gulp.src(paths.src.images.basic)
 		.pipe(_if(isProduction, tinypng()))
 		.pipe(gulp.dest(paths.dest.images))
 })
+
+// Images
+gulp.task('images:build', ['images:svg', 'images:basic'])
 
 // Fonts
 gulp.task('fonts:build', () => {
