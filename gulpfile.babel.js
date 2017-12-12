@@ -141,7 +141,8 @@ const bsConfig = {
 	server: {
 		baseDir: `./${dirs.dest}`
 	},
-	tunnel: true,
+	notify: false,
+	ghostMode: false,
 	host: 'localhost',
 	port: 9000,
 	logPrefix: 'markup-boilerplate'
