@@ -14,12 +14,13 @@
 		"gulp-rigger": "^0.5.8",
 		"gulp-sass": "^3.1.0",
 		"gulp-sourcemaps": "^2.6.1",
+		"gulp-tinypng-nokey": "^1.1.0",
 		"gulp-uglify": "^3.0.0",
 		"gulp-watch": "^4.3.11",
 		"imagemin-pngquant": "^5.0.1",
-		"rimraf": "^2.6.2",
 		"jquery": "^3.2.1",
 		"normalize.css": "^7.0.0",
-		"gulp-tinypng-nokey": "^1.1.0"
+		"rimraf": "^2.6.2",
+		"run-sequence": "^2.2.0"
 	}
 }

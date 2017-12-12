@@ -11,6 +11,7 @@ import pngquant from 'imagemin-pngquant'
 import rimraf from 'rimraf'
 import browserSync from 'browser-sync'
 import tinypng from 'gulp-tinypng-nokey'
+import runSequence from 'run-sequence'
 
 const reload = browserSync.reload
 
@@ -135,13 +136,9 @@ gulp.task('fonts:build', () => {
 })
 
 // Build
-gulp.task('build', [
-	'html:build',
-	'javascripts:build',
-	'stylesheets:build',
-	'fonts:build',
-	'images:build'
-])
+gulp.task('build', (cb) => {
+	runSequence('clean', 'html:build', 'javascripts:build', 'stylesheets:build', 'fonts:build', 'images:build', cb)
+})
 
 // Source watchers
 gulp.task('watch', () => {
