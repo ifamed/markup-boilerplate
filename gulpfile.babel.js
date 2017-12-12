@@ -24,7 +24,7 @@ const reload = browserSync.reload
  * * * * * * * * * */
 
 // Mode: enable compress css/js and optimize images
-const isProduction = true
+const isProduction = false
 
 const dirs = {
 	src: 'src',
@@ -35,28 +35,28 @@ const dirs = {
 const paths = {
 	dest: {
 		html: `${dirs.dest}/`,
-		javascripts: `${dirs.dest}/assets/javascripts/`,
-		stylesheets: `${dirs.dest}/assets/stylesheets/`,
+		js: `${dirs.dest}/assets/js/`,
+		styles: `${dirs.dest}/assets/styles/`,
 		images: `${dirs.dest}/assets/images/`,
 		fonts: `${dirs.dest}/assets/fonts/`
 	},
 	src: {
 		html: `${dirs.src}/**/*.html`,
-		javascripts: `${dirs.src}/assets/javascripts/main.js`,
-		stylesheets: `${dirs.src}/assets/stylesheets/main.scss`,
+		js: `${dirs.src}/assets/js/main.js`,
+		styles: `${dirs.src}/assets/styles/main.scss`,
 		images: {
 			all: `${dirs.src}/assets/images/**/*.*`,
 			svg: `${dirs.src}/assets/images/**/*.svg`,
 			basic: `${dirs.src}/assets/images/**/*.{jpg,jpeg,png}`
 		},
-		fonts: `${dirs.src}/assets/fonts/**/*.*`
+		fonts: `${dirs.src}/assets/fonts/**/*.{eot,ttf,woff,woff2,svg}`
 	},
 	watch: {
 		html: `${dirs.src}/**/*.html`,
-		javascripts: `${dirs.src}/assets/javascripts/**/*.js`,
-		stylesheets: `${dirs.src}/assets/stylesheets/**/*.scss`,
+		js: `${dirs.src}/assets/js/**/*.js`,
+		styles: `${dirs.src}/assets/styles/**/*.scss`,
 		images: `${dirs.src}/assets/images/**/*.*`,
-		fonts: `${dirs.src}/assets/fonts/**/*.*`
+		fonts: `${dirs.src}/assets/fonts/**/*.{eot,ttf,woff,woff2,svg}`
 	},
 	clean: `./${dirs.dest}`
 }
@@ -137,7 +137,7 @@ const plugins = {
 }
 
 // BrowserSync config
-var config = {
+const bsConfig = {
 	server: {
 		baseDir: `./${dirs.dest}`
 	},
@@ -151,9 +151,10 @@ var config = {
  *	Gulpfile tasks
  * * * * * * * * * */
 
+//------------------------------------------------------------ Helpers
 // Init BrowserSync
-gulp.task('webserver', () => {
-	browserSync(config)
+gulp.task('browserSync', () => {
+	browserSync(bsConfig)
 })
 
 // Clean build folder
@@ -161,7 +162,7 @@ gulp.task('clean', (cb) => {
 	rimraf(paths.clean, cb)
 })
 
-// HTML
+//------------------------------------------------------------ HTML
 gulp.task('html:build', () => {
 	gulp.src(paths.src.html)
 		.pipe(rigger())
@@ -170,66 +171,61 @@ gulp.task('html:build', () => {
 		.pipe(reload({stream: true}))
 })
 
-// Javascripts
-gulp.task('javascripts:build', () => {
-	gulp.src(paths.src.javascripts)
+//------------------------------------------------------------ JS
+gulp.task('js:build', () => {
+	gulp.src(paths.src.js)
 		.pipe(rigger())
 		.pipe(_if(!isProduction, sourcemaps.init()))
 		.pipe(_if(isProduction, uglify(plugins.uglify)))
 		.pipe(_if(!isProduction, sourcemaps.write()))
-		.pipe(gulp.dest(paths.dest.javascripts))
+		.pipe(gulp.dest(paths.dest.js))
 		.pipe(reload({stream: true}))
 })
 
-// Stylesheets
-gulp.task('stylesheets:build', () => {
-	gulp.src(paths.src.stylesheets)
+//------------------------------------------------------------ Styles
+gulp.task('styles:build', () => {
+	gulp.src(paths.src.styles)
 		.pipe(_if(!isProduction, sourcemaps.init()))
 		.pipe(sass(plugins.sass))
 		.pipe(_if(isProduction, postCSS(plugins.postCSS)))
 		.pipe(_if(!isProduction, sourcemaps.write()))
-		.pipe(gulp.dest(paths.dest.stylesheets))
+		.pipe(gulp.dest(paths.dest.styles))
 		.pipe(reload({stream: true}))
 })
 
-// Images: SVG
+//------------------------------------------------------------ Images
+// SVG
 gulp.task('images:svg', () => {
 	return gulp.src(paths.src.images.svg)
 		.pipe(_if(isProduction, svgmin(plugins.svgmin)))
 		.pipe(gulp.dest(paths.dest.images))
 })
 
-// Images: JPG, JPEG, PNG
+// JPG, JPEG, PNG
 gulp.task('images:basic', () => {
 	return gulp.src(paths.src.images.basic)
 		.pipe(_if(isProduction, tinypng()))
 		.pipe(gulp.dest(paths.dest.images))
 })
 
-// Images
 gulp.task('images:build', ['images:svg', 'images:basic'])
 
-// Fonts
+//------------------------------------------------------------ Fonts
 gulp.task('fonts:build', () => {
 	gulp.src(paths.src.fonts)
 		.pipe(gulp.dest(paths.dest.fonts))
 })
 
-// Build
-gulp.task('build', (cb) => {
-	runSequence('clean', 'html:build', 'javascripts:build', 'stylesheets:build', 'fonts:build', 'images:build', cb)
-})
-
-// Source watchers
+//------------------------------------------------------------ General tasks
 gulp.task('watch', () => {
 	watch([paths.watch.html], (event, cb) => {
 		gulp.start('html:build')
 	})
-	watch([paths.watch.stylesheets], (event, cb) => {
-		gulp.start('stylesheets:build')
+	watch([paths.watch.styles], (event, cb) => {
+		gulp.start('styles:build')
 	})
-	watch([paths.watch.javascripts], (event, cb) => {
-		gulp.start('javascripts:build')
+	watch([paths.watch.js], (event, cb) => {
+		gulp.start('js:build')
 	})
 	watch([paths.watch.images], (event, cb) => {
 		gulp.start('images:build')
@@ -239,6 +235,10 @@ gulp.task('watch', () => {
 	})
 })
 
+gulp.task('build', (cb) => {
+	runSequence('clean', 'html:build', 'js:build', 'styles:build', 'fonts:build', 'images:build', cb)
+})
+
 gulp.task('default', (cb) => {
-	runSequence('build', 'webserver', 'watch', cb)
+	runSequence('build', 'browserSync', 'watch', cb)
 })
