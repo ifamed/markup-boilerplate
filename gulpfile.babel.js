@@ -10,6 +10,7 @@ import imagemin from 'gulp-imagemin'
 import pngquant from 'imagemin-pngquant'
 import rimraf from 'rimraf'
 import browserSync from 'browser-sync'
+import tinypng from 'gulp-tinypng-nokey'
 
 const reload = browserSync.reload
 
@@ -78,7 +79,7 @@ gulp.task('html:build', () => {
 	gulp.src(paths.src.html)
 		.pipe(rigger())
 		.pipe(gulp.dest(paths.dest.html))
-		.pipe(reload({ stream: true }))
+		.pipe(reload({stream: true}))
 })
 
 // Javascripts
@@ -89,7 +90,7 @@ gulp.task('javascripts:build', () => {
 		.pipe(uglify())
 		.pipe(sourcemaps.write())
 		.pipe(gulp.dest(paths.dest.javascripts))
-		.pipe(reload({ stream: true }))
+		.pipe(reload({stream: true}))
 })
 
 // Stylesheets
@@ -104,20 +105,27 @@ gulp.task('stylesheets:build', () => {
 		.pipe(cssmin())
 		.pipe(sourcemaps.write())
 		.pipe(gulp.dest(paths.dest.stylesheets))
-		.pipe(reload({ stream: true }))
+		.pipe(reload({stream: true}))
 })
 
-// Images
+// Images (local optimization)
+// gulp.task('images:build', () => {
+// 	gulp.src(paths.src.images)
+// 		.pipe(imagemin([
+// 			imagemin.gifsicle({interlaced: true}),
+// 			imagemin.jpegtran({progressive: true}),
+// 			imagemin.optipng({optimizationLevel: 7}),
+// 			imagemin.svgo({plugins: [{removeViewBox: false}]})
+// 		]))
+// 		.pipe(gulp.dest(paths.dest.images))
+// 		.pipe(reload({stream: true}))
+// })
+
+// Images (remote optimization)
 gulp.task('images:build', () => {
-	gulp.src(paths.src.images)
-		.pipe(imagemin({
-			progressive: true,
-			svgoPlugins: [{ removeViewBox: false }],
-			use: [pngquant()],
-			interlaced: true
-		}))
+	return gulp.src(paths.src.images)
+		.pipe(tinypng())
 		.pipe(gulp.dest(paths.dest.images))
-		.pipe(reload({ stream: true }))
 })
 
 // Fonts

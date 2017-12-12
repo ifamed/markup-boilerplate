@@ -19,6 +19,7 @@
 		"imagemin-pngquant": "^5.0.1",
 		"rimraf": "^2.6.2",
 		"jquery": "^3.2.1",
-		"normalize.css": "^7.0.0"
+		"normalize.css": "^7.0.0",
+		"gulp-tinypng-nokey": "^1.1.0"
 	}
 }
