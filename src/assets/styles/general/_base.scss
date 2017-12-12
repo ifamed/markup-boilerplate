@@ -14,8 +14,6 @@ html {
 html,
 body {
 	height: 100%;
-	user-select: none;
-	appearance: none !important;
 	backface-visibility: hidden;
 	-webkit-font-smoothing: antialiased;
 	-moz-font-smoothing: antialiased;
@@ -45,7 +43,9 @@ h5 {
 }
 
 a {
-	text-decoration: none & [x-apple-data-detectors] {
+	text-decoration: none;
+
+	& [x-apple-data-detectors] {
 		font: {
 			family: inherit;
 			size: inherit;
