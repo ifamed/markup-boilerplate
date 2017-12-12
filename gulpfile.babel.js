@@ -159,4 +159,6 @@ gulp.task('watch', () => {
 	})
 })
 
-gulp.task('default', ['build', 'webserver', 'watch'])
+gulp.task('default', (cb) => {
+	runSequence('build', 'webserver', 'watch', cb)
+})
