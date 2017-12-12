@@ -23,7 +23,8 @@ const reload = browserSync.reload
  *	Gulpfile config
  * * * * * * * * * */
 
-const isProduction = false; // compress css/js, optimize images
+// Mode: enable compress css/js and optimize images
+const isProduction = true
 
 const dirs = {
 	src: 'src',
@@ -60,6 +61,81 @@ const paths = {
 	clean: `./${dirs.dest}`
 }
 
+// Plugins
+const plugins = {
+	htmlmin: {collapseWhitespace: true},
+	uglify: {
+		mangle: true,
+		compress: {
+			sequences: true,
+			dead_code: true,
+			conditionals: true,
+			booleans: true,
+			unused: true,
+			if_return: true,
+			join_vars: true,
+			drop_console: true
+		}
+	},
+	sass: {
+		sourceMap: !isProduction,
+		errLogToConsole: true
+	},
+	postCSS: [
+		flexbugsFixes(),
+		autoprefixer({
+			browsers: ['last 2 versions', 'ie >= 11', 'Opera 12.1', 'Android 4', 'Firefox ESR', 'iOS >= 8', 'Safari >= 8'],
+			cascade: false
+		}),
+		cssnano({
+			autoprefixer: false,
+			discardUnused: true,
+			mergeIdents: true,
+			reduceIdents: false,
+			zindex: false
+		})
+	],
+	svgmin: {
+		plugins: [
+			{removeDoctype: true},
+			{removeComments: true},
+			{removeXMLProcInst: true},
+			{removeMetadata: true},
+			{removeTitle: true},
+			{removeHiddenElems: true},
+			{removeEmptyText: true},
+			{removeViewBox: true},
+			{convertStyleToAttrs: true},
+			{minifyStyles: true},
+			{cleanupIDs: true},
+			{removeRasterImages: true},
+			{removeUselessDefs: true},
+			{cleanupListOfValues: true},
+			{cleanupNumericValues: true},
+			{convertColors: true},
+			{removeUnknownsAndDefaults: true},
+			{removeNonInheritableGroupAttrs: true},
+			{removeUselessStrokeAndFill: true},
+			{cleanupEnableBackground: true},
+			{convertShapeToPath: true},
+			{moveElemsAttrsToGroup: true},
+			{moveGroupAttrsToElems: true},
+			{collapseGroups: true},
+			{convertPathData: true},
+			{convertTransform: true},
+			{removeEmptyAttrs: true},
+			{removeEmptyContainers: true},
+			{mergePaths: true},
+			{removeUnusedNS: true},
+			{sortAttrs: true},
+			{removeDesc: true},
+			{removeDimensions: true},
+			{removeStyleElement: true},
+			{removeScriptElement: true},
+		]
+	}
+}
+
 // BrowserSync config
 var config = {
 	server: {
@@ -89,7 +165,7 @@ gulp.task('clean', (cb) => {
 gulp.task('html:build', () => {
 	gulp.src(paths.src.html)
 		.pipe(rigger())
-		.pipe(_if(isProduction, htmlmin({collapseWhitespace: true})))
+		.pipe(_if(isProduction, htmlmin(plugins.htmlmin)))
 		.pipe(gulp.dest(paths.dest.html))
 		.pipe(reload({stream: true}))
 })
@@ -99,19 +175,7 @@ gulp.task('javascripts:build', () => {
 	gulp.src(paths.src.javascripts)
 		.pipe(rigger())
 		.pipe(_if(!isProduction, sourcemaps.init()))
-		.pipe(_if(isProduction, uglify({
-			mangle: true,
-			compress: {
-				sequences: true,
-				dead_code: true,
-				conditionals: true,
-				booleans: true,
-				unused: true,
-				if_return: true,
-				join_vars: true,
-				drop_console: true
-			}
-		})))
+		.pipe(_if(isProduction, uglify(plugins.uglify)))
 		.pipe(_if(!isProduction, sourcemaps.write()))
 		.pipe(gulp.dest(paths.dest.javascripts))
 		.pipe(reload({stream: true}))
@@ -121,24 +185,8 @@ gulp.task('javascripts:build', () => {
 gulp.task('stylesheets:build', () => {
 	gulp.src(paths.src.stylesheets)
 		.pipe(_if(!isProduction, sourcemaps.init()))
-		.pipe(sass({
-			sourceMap: !isProduction,
-			errLogToConsole: true
-		}))
-		.pipe(_if(isProduction, postCSS([
-			flexbugsFixes(),
-			autoprefixer({
-				browsers: ['last 2 versions', 'ie >= 11', 'Opera 12.1', 'Android 4', 'Firefox ESR', 'iOS >= 8', 'Safari >= 8'],
-				cascade: false
-			}),
-			cssnano({
-				autoprefixer: false,
-				discardUnused: true,
-				mergeIdents: true,
-				reduceIdents: false,
-				zindex: false
-			})
-		])))
+		.pipe(sass(plugins.sass))
+		.pipe(_if(isProduction, postCSS(plugins.postCSS)))
 		.pipe(_if(!isProduction, sourcemaps.write()))
 		.pipe(gulp.dest(paths.dest.stylesheets))
 		.pipe(reload({stream: true}))
@@ -147,45 +195,7 @@ gulp.task('stylesheets:build', () => {
 // Images: SVG
 gulp.task('images:svg', () => {
 	return gulp.src(paths.src.images.svg)
-		.pipe(_if(isProduction, svgmin({
-			plugins: [
-				{removeDoctype: true},
-				{removeComments: true},
-				{removeXMLProcInst: true},
-				{removeMetadata: true},
-				{removeTitle: true},
-				{removeHiddenElems: true},
-				{removeEmptyText: true},
-				{removeViewBox: true},
-				{convertStyleToAttrs: true},
-				{minifyStyles: true},
-				{cleanupIDs: true},
-				{removeRasterImages: true},
-				{removeUselessDefs: true},
-				{cleanupListOfValues: true},
-				{cleanupNumericValues: true},
-				{convertColors: true},
-				{removeUnknownsAndDefaults: true},
-				{removeNonInheritableGroupAttrs: true},
-				{removeUselessStrokeAndFill: true},
-				{cleanupEnableBackground: true},
-				{convertShapeToPath: true},
-				{moveElemsAttrsToGroup: true},
-				{moveGroupAttrsToElems: true},
-				{collapseGroups: true},
-				{convertPathData: true},
-				{convertTransform: true},
-				{removeEmptyAttrs: true},
-				{removeEmptyContainers: true},
-				{mergePaths: true},
-				{removeUnusedNS: true},
-				{sortAttrs: true},
-				{removeDesc: true},
-				{removeDimensions: true},
-				{removeStyleElement: true},
-				{removeScriptElement: true},
-			]
-		})))
+		.pipe(_if(isProduction, svgmin(plugins.svgmin)))
 		.pipe(gulp.dest(paths.dest.images))
 })
 
