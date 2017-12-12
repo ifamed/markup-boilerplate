@@ -20,6 +20,7 @@
 		"gulp-svgmin": "^1.2.4",
 		"gulp-tinypng-nokey": "^1.1.0",
 		"gulp-uglify": "^3.0.0",
+		"gulp-util": "^3.0.8",
 		"gulp-watch": "^4.3.11",
 		"jquery": "^3.2.1",
 		"normalize.css": "^7.0.0",

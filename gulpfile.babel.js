@@ -16,6 +16,7 @@ import _if from 'gulp-if'
 import svgmin from 'gulp-svgmin'
 import htmlmin from 'gulp-htmlmin'
 import size from 'gulp-size'
+import gutil from 'gulp-util'
 
 
 const reload = browserSync.reload
@@ -164,11 +165,17 @@ gulp.task('clean', (cb) => {
 	rimraf(paths.clean, cb)
 })
 
+// Handle stream errors
+function handleErrors(e) {
+	gutil.log(e);
+	this.end();
+}
+
 //------------------------------------------------------------ HTML
 gulp.task('html:build', () => {
 	gulp.src(paths.src.html)
-		.pipe(rigger())
-		.pipe(_if(isProduction, htmlmin(plugins.htmlmin)))
+		.pipe(rigger().on('error', handleErrors))
+		.pipe(_if(isProduction, htmlmin(plugins.htmlmin).on('error', handleErrors)))
 		.pipe(size({showFiles: true}))
 		.pipe(gulp.dest(paths.dest.html))
 		.pipe(reload({stream: true}))
@@ -177,9 +184,9 @@ gulp.task('html:build', () => {
 //------------------------------------------------------------ JS
 gulp.task('js:build', () => {
 	gulp.src(paths.src.js)
-		.pipe(rigger())
+		.pipe(rigger().on('error', handleErrors))
 		.pipe(_if(!isProduction, sourcemaps.init()))
-		.pipe(_if(isProduction, uglify(plugins.uglify)))
+		.pipe(_if(isProduction, uglify(plugins.uglify).on('error', handleErrors)))
 		.pipe(_if(!isProduction, sourcemaps.write()))
 		.pipe(size({showFiles: true}))
 		.pipe(gulp.dest(paths.dest.js))
@@ -190,7 +197,7 @@ gulp.task('js:build', () => {
 gulp.task('styles:build', () => {
 	gulp.src(paths.src.styles)
 		.pipe(_if(!isProduction, sourcemaps.init()))
-		.pipe(sass(plugins.sass))
+		.pipe(sass(plugins.sass).on('error', handleErrors))
 		.pipe(_if(isProduction, postCSS(plugins.postCSS)))
 		.pipe(_if(!isProduction, sourcemaps.write()))
 		.pipe(size({showFiles: true}))
