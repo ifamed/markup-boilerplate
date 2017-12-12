@@ -1,23 +1,26 @@
 import gulp from 'gulp'
 import watch from 'gulp-watch'
-import prefixer from 'gulp-autoprefixer'
 import uglify from 'gulp-uglify'
 import sass from 'gulp-sass'
 import sourcemaps from 'gulp-sourcemaps'
 import rigger from 'gulp-rigger'
-import cssmin from 'gulp-minify-css'
-import imagemin from 'gulp-imagemin'
-import pngquant from 'imagemin-pngquant'
 import rimraf from 'rimraf'
 import browserSync from 'browser-sync'
 import tinypng from 'gulp-tinypng-nokey'
 import runSequence from 'run-sequence'
+import flexbugsFixes from 'postcss-flexbugs-fixes'
+import autoprefixer from 'autoprefixer'
+import cssnano from 'cssnano'
+import postCSS from 'gulp-postcss'
+import _if from 'gulp-if'
 
 const reload = browserSync.reload
 
 /* * * * * * * * * *
  *	Gulpfile config
  * * * * * * * * * */
+
+const isProduction = false; // compress css/js, optimize images
 
 const dirs = {
 	src: 'src',
@@ -87,9 +90,21 @@ gulp.task('html:build', () => {
 gulp.task('javascripts:build', () => {
 	gulp.src(paths.src.javascripts)
 		.pipe(rigger())
-		.pipe(sourcemaps.init())
-		.pipe(uglify())
-		.pipe(sourcemaps.write())
+		.pipe(_if(!isProduction, sourcemaps.init()))
+		.pipe(_if(isProduction, uglify({
+			mangle: true,
+			compress: {
+				sequences: true,
+				dead_code: true,
+				conditionals: true,
+				booleans: true,
+				unused: true,
+				if_return: true,
+				join_vars: true,
+				drop_console: true
+			}
+		})))
+		.pipe(_if(!isProduction, sourcemaps.write()))
 		.pipe(gulp.dest(paths.dest.javascripts))
 		.pipe(reload({stream: true}))
 })
@@ -97,14 +112,26 @@ gulp.task('javascripts:build', () => {
 // Stylesheets
 gulp.task('stylesheets:build', () => {
 	gulp.src(paths.src.stylesheets)
-		.pipe(sourcemaps.init())
+		.pipe(_if(!isProduction, sourcemaps.init()))
 		.pipe(sass({
-			sourceMap: true,
+			sourceMap: !isProduction,
 			errLogToConsole: true
 		}))
-		.pipe(prefixer())
-		.pipe(cssmin())
-		.pipe(sourcemaps.write())
+		.pipe(_if(isProduction, postCSS([
+			flexbugsFixes(),
+			autoprefixer({
+				browsers: ['last 2 versions', 'ie >= 11', 'Opera 12.1', 'Android 4', 'Firefox ESR', 'iOS >= 8', 'Safari >= 8'],
+				cascade: false
+			}),
+			cssnano({
+				autoprefixer: false,
+				discardUnused: true,
+				mergeIdents: true,
+				reduceIdents: false,
+				zindex: false
+			})
+		])))
+		.pipe(_if(!isProduction, sourcemaps.write()))
 		.pipe(gulp.dest(paths.dest.stylesheets))
 		.pipe(reload({stream: true}))
 })
@@ -125,7 +152,7 @@ gulp.task('stylesheets:build', () => {
 // Images (remote optimization)
 gulp.task('images:build', () => {
 	return gulp.src(paths.src.images)
-		.pipe(tinypng())
+		.pipe(_if(isProduction, tinypng()))
 		.pipe(gulp.dest(paths.dest.images))
 })
 
