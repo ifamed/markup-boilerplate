@@ -86,7 +86,15 @@ const plugins = {
 	postCSS: [
 		flexbugsFixes(),
 		autoprefixer({
-			browsers: ['last 2 versions', 'ie >= 11', 'Opera 12.1', 'Android 4', 'Firefox ESR', 'iOS >= 8', 'Safari >= 8'],
+			browsers: [
+				'last 2 versions',
+				'ie >= 11',
+				'Opera 12.1',
+				'Android 4',
+				'Firefox ESR',
+				'iOS >= 8',
+				'Safari >= 8'
+			],
 			cascade: false
 		}),
 		cssnano({
