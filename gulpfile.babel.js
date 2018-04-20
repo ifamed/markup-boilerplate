@@ -21,6 +21,7 @@ import htmlmin from 'gulp-htmlmin'
 // ENV
 // util.env.production
 // util.env.development
+// util.env.open
 
 //------------------------------------------------------------ Config
 
@@ -36,7 +37,7 @@ const
 			baseDir: project.dest
 		},
 		files: `${project.dest}/**/*.*`,
-		open: true,
+		open: util.env.open,
 		notify: false,
 		port: 9000,
 		logPrefix: project.name
