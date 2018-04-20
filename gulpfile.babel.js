@@ -19,9 +19,11 @@ import notifier from 'node-notifier'
 import htmlmin from 'gulp-htmlmin'
 
 // ENV
-// util.env.production
-// util.env.development
+// util.env.production or util.env.prod
+// util.env.development or util.env.dev
 // util.env.open
+util.env.production = util.env.production || util.env.prod;
+util.env.development = util.env.development || util.env.dev;
 
 //------------------------------------------------------------ Config
 
