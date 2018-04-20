@@ -26,6 +26,7 @@ coverage
 # ignore build files
 /public
 /build
+/dest
 
 # misc
 .DS_Store

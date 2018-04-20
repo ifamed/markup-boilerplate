@@ -1,20 +1,6 @@
-html {
-	box-sizing: border-box;
-}
-
-*,
-*::before,
-*::after {
-	border-radius: 0;
-	outline: none;
-	box-sizing: border-box;
-	appearance: none !important;
-}
-
 html,
 body {
 	height: 100%;
-	backface-visibility: hidden;
 	-webkit-font-smoothing: antialiased;
 	-moz-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;

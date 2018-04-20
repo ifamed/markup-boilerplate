@@ -1,264 +1,250 @@
 import gulp from 'gulp'
-import watch from 'gulp-watch'
-import uglify from 'gulp-uglify'
-import sass from 'gulp-sass'
-import sourcemaps from 'gulp-sourcemaps'
-import rigger from 'gulp-rigger'
-import rimraf from 'rimraf'
+import util from 'gulp-util'
+import del from 'del'
 import browserSync from 'browser-sync'
-import tinypng from 'gulp-tinypng-nokey'
-import runSequence from 'run-sequence'
+import _if from 'gulp-if'
+import sourcemaps from 'gulp-sourcemaps'
+import sass from 'gulp-sass'
+import rigger from 'gulp-rigger'
 import flexbugsFixes from 'postcss-flexbugs-fixes'
 import autoprefixer from 'autoprefixer'
-import cssnano from 'cssnano'
 import postCSS from 'gulp-postcss'
-import _if from 'gulp-if'
-import svgmin from 'gulp-svgmin'
-import htmlmin from 'gulp-htmlmin'
+import tinypng from 'gulp-tinypng-nokey'
+import buffer from 'vinyl-buffer'
 import size from 'gulp-size'
-import gutil from 'gulp-util'
+import svgmin from 'gulp-svgmin'
+import uglify from 'gulp-uglify'
+import csso from 'postcss-csso'
+import notifier from 'node-notifier'
+import htmlmin from 'gulp-htmlmin'
 
+// ENV
+// util.env.production
+// util.env.development
 
-const reload = browserSync.reload
+//------------------------------------------------------------ Config
 
-/* * * * * * * * * *
- *	Gulpfile config
- * * * * * * * * * */
+const project = {
+	name: 'markup-boilerplate',
+	src: './src/',
+	dest: './dest/'
+};
 
-// Mode: enable compress css/js and optimize images
-const isProduction = false
-
-const dirs = {
-	src: 'src',
-	dest: 'build'
-}
-
-// Paths
-const paths = {
-	dest: {
-		html: `${dirs.dest}/`,
-		js: `${dirs.dest}/assets/js/`,
-		styles: `${dirs.dest}/assets/styles/`,
-		images: `${dirs.dest}/assets/images/`,
-		fonts: `${dirs.dest}/assets/fonts/`
-	},
-	src: {
-		html: `${dirs.src}/**/*.html`,
-		js: `${dirs.src}/assets/js/main.js`,
-		styles: `${dirs.src}/assets/styles/main.scss`,
-		images: {
-			all: `${dirs.src}/assets/images/**/*.*`,
-			svg: `${dirs.src}/assets/images/**/*.svg`,
-			basic: `${dirs.src}/assets/images/**/*.{jpg,jpeg,png}`
+const
+	syncOptions = {
+		server: {
+			baseDir: project.dest
 		},
-		fonts: `${dirs.src}/assets/fonts/**/*.{eot,ttf,woff,woff2,svg}`
+		files: `${project.dest}/**/*.*`,
+		open: true,
+		notify: false,
+		port: 9000,
+		logPrefix: project.name
 	},
-	watch: {
-		html: `${dirs.src}/**/*.html`,
-		js: `${dirs.src}/assets/js/**/*.js`,
-		styles: `${dirs.src}/assets/styles/**/*.scss`,
-		images: `${dirs.src}/assets/images/**/*.*`,
-		fonts: `${dirs.src}/assets/fonts/**/*.{eot,ttf,woff,woff2,svg}`
-	},
-	clean: `./${dirs.dest}`
-}
+	plugins = {
+		postCSS: [
+			flexbugsFixes(),
+			autoprefixer({
+				browsers: ['last 4 versions', '> 1%', 'ie >= 11', 'opera >= 23', 'android >= 4', 'ff >= 30', 'ios >= 8', 'safari >= 8'],
+				cascade: false
+			}),
+			csso
+		],
+		uglify: {
+			mangle: true,
+			compress: {
+				sequences: true,
+				dead_code: true,
+				conditionals: true,
+				booleans: true,
+				unused: true,
+				if_return: true,
+				join_vars: true,
+				drop_console: true
+			}
+		},
+		svgmin: {
+			plugins: [
+				{removeDoctype: true},
+				{removeComments: true},
+				{removeXMLProcInst: true},
+				{removeMetadata: true},
+				{removeTitle: true},
+				{removeHiddenElems: true},
+				{removeEmptyText: true},
+				{removeViewBox: true},
+				{convertStyleToAttrs: true},
+				{minifyStyles: true},
+				{cleanupIDs: true},
+				{removeRasterImages: true},
+				{removeUselessDefs: true},
+				{cleanupListOfValues: true},
+				{cleanupNumericValues: true},
+				{convertColors: true},
+				{removeUnknownsAndDefaults: true},
+				{removeNonInheritableGroupAttrs: true},
+				{removeUselessStrokeAndFill: true},
+				{cleanupEnableBackground: true},
+				{convertShapeToPath: true},
+				{moveElemsAttrsToGroup: true},
+				{moveGroupAttrsToElems: true},
+				{collapseGroups: true},
+				{convertPathData: true},
+				{convertTransform: true},
+				{removeEmptyAttrs: true},
+				{removeEmptyContainers: true},
+				{mergePaths: true},
+				{removeUnusedNS: true},
+				{sortAttrs: true},
+				{removeDesc: true},
+				{removeDimensions: true},
+				{removeScriptElement: true}
+			]
+		},
+		htmlmin: {collapseWhitespace: true}
+	};
 
-// Plugins
-const plugins = {
-	htmlmin: {collapseWhitespace: true},
-	uglify: {
-		mangle: true,
-		compress: {
-			sequences: true,
-			dead_code: true,
-			conditionals: true,
-			booleans: true,
-			unused: true,
-			if_return: true,
-			join_vars: true,
-			drop_console: true
+const paths = {
+	project: {
+		build: {
+			html: project.dest,
+			js: `${project.dest}/assets/js/`,
+			styles: `${project.dest}/assets/css/`,
+			fonts: `${project.dest}/assets/fonts/`,
+			images: `${project.dest}/images/`,
+		},
+		src: {
+			html: `${project.src}/**/*.html`,
+			js: `${project.src}/assets/js/main.js`,
+			styles: `${project.src}/assets/scss/main.scss`,
+			fonts: `${project.src}/assets/fonts/**/*.*`,
+			images: `${project.src}/images/**/*.*`,
+		},
+		watch: {
+			html: `${project.src}/**/*.html`,
+			js: `${project.src}/assets/js/**/*.js`,
+			styles: `${project.src}/assets/scss/**/*.scss`,
+			fonts: `${project.src}/assets/fonts/**/*.*`,
+			images: `${project.src}/images/**/*.*`,
 		}
 	},
-	sass: {
-		sourceMap: !isProduction,
-		errLogToConsole: true
-	},
-	postCSS: [
-		flexbugsFixes(),
-		autoprefixer({
-			browsers: [
-				'last 2 versions',
-				'ie >= 11',
-				'Opera 12.1',
-				'Android 4',
-				'Firefox ESR',
-				'iOS >= 8',
-				'Safari >= 8'
-			],
-			cascade: false
-		}),
-		cssnano({
-			autoprefixer: false,
-			discardUnused: true,
-			mergeIdents: true,
-			reduceIdents: false,
-			zindex: false
-		})
-	],
-	svgmin: {
-		plugins: [
-			{removeDoctype: true},
-			{removeComments: true},
-			{removeXMLProcInst: true},
-			{removeMetadata: true},
-			{removeTitle: true},
-			{removeHiddenElems: true},
-			{removeEmptyText: true},
-			{removeViewBox: true},
-			{convertStyleToAttrs: true},
-			{minifyStyles: true},
-			{cleanupIDs: true},
-			{removeRasterImages: true},
-			{removeUselessDefs: true},
-			{cleanupListOfValues: true},
-			{cleanupNumericValues: true},
-			{convertColors: true},
-			{removeUnknownsAndDefaults: true},
-			{removeNonInheritableGroupAttrs: true},
-			{removeUselessStrokeAndFill: true},
-			{cleanupEnableBackground: true},
-			{convertShapeToPath: true},
-			{moveElemsAttrsToGroup: true},
-			{moveGroupAttrsToElems: true},
-			{collapseGroups: true},
-			{convertPathData: true},
-			{convertTransform: true},
-			{removeEmptyAttrs: true},
-			{removeEmptyContainers: true},
-			{mergePaths: true},
-			{removeUnusedNS: true},
-			{sortAttrs: true},
-			{removeDesc: true},
-			{removeDimensions: true},
-			{removeStyleElement: true},
-			{removeScriptElement: true},
-		]
-	}
+	clean: project.dest
+};
+
+//------------------------------------------------------------ HTML
+gulp.task('html', () =>
+	gulp.src(paths.project.src.html)
+		.pipe(rigger().on('error', handleErrors))
+		.pipe(_if(util.env.development, htmlmin(plugins.htmlmin).on('error', handleErrors)))
+		.pipe(size({showFiles: true, title: 'html'}))
+		.pipe(gulp.dest(paths.project.build.html))
+);
+
+//------------------------------------------------------------ JS
+
+gulp.task('js', () => handleJS(paths.project.src.js, paths.project.build.js, 'js'));
+
+function handleJS(src, build, title) {
+	return gulp.src(src)
+		.pipe(rigger().on('error', handleErrors))
+		.pipe(_if(util.env.development, sourcemaps.init()))
+		.pipe(_if(util.env.production, uglify(plugins.uglify).on('error', handleErrors)))
+		.pipe(_if(util.env.development, sourcemaps.write()))
+		.pipe(size({showFiles: true, title: title}))
+		.pipe(gulp.dest(build));
 }
 
-// BrowserSync config
-const bsConfig = {
-	server: {
-		baseDir: `./${dirs.dest}`
-	},
-	notify: false,
-	ghostMode: false,
-	host: 'localhost',
-	port: 9000,
-	logPrefix: 'markup-boilerplate'
+//------------------------------------------------------------ Styles
+
+gulp.task('styles', () => handleStyles(paths.project.src.styles, paths.project.build.styles, 'styles'));
+
+function handleStyles(src, build, title) {
+	return gulp.src(src)
+		.pipe(_if(util.env.development, sourcemaps.init()))
+		.pipe(sass({
+			includePaths: [src],
+			outputStyle: util.env.production ? 'compact' : 'expanded',
+			precision: 5,
+			sourceMap: util.env.development,
+			errLogToConsole: true
+		}).on('error', handleErrors))
+		.pipe(_if(util.env.production, postCSS(plugins.postCSS)))
+		.pipe(_if(util.env.development, sourcemaps.write()))
+		.pipe(size({showFiles: true, title: title}))
+		.pipe(gulp.dest(build));
 }
 
-/* * * * * * * * * *
- *	Gulpfile tasks
- * * * * * * * * * */
+//------------------------------------------------------------ Fonts
 
-//------------------------------------------------------------ Helpers
-// Init BrowserSync
-gulp.task('browserSync', () => {
-	browserSync(bsConfig)
-})
+gulp.task('fonts', () =>
+	gulp.src(paths.project.src.fonts)
+		.pipe(gulp.dest(paths.project.build.fonts))
+);
 
-// Clean build folder
-gulp.task('clean', (cb) => {
-	rimraf(paths.clean, cb)
-})
+//------------------------------------------------------------ Images
 
-// Handle stream errors
+gulp.task('images:tinypng', () =>
+	gulp.src(`${project.src}/images/**/*.{jpg,jpeg,png}`)
+		.pipe(_if(util.env.production, tinypng()))
+		.pipe(gulp.dest(paths.project.build.images))
+);
+
+gulp.task('images:svg', () =>
+	gulp.src(`${project.src}/images/**/*.svg`)
+		.pipe(_if(util.env.production, svgmin(plugins.svgmin)))
+		.pipe(gulp.dest(paths.project.build.images))
+);
+
+gulp.task('images', gulp.parallel('images:tinypng', 'images:svg'));
+
+//------------------------------------------------------------ Watch
+
+gulp.task('watch', () => {
+	gulp.watch(paths.project.watch.html)
+		.on('add', gulp.series('clean', 'html'))
+		.on('change', gulp.series('clean', 'html'))
+		.on('unlink', gulp.series('clean', 'html'));
+
+	gulp.watch(paths.project.watch.js)
+		.on('add', gulp.series('clean', 'js'))
+		.on('change', gulp.series('clean', 'js'))
+		.on('unlink', gulp.series('clean', 'js'));
+
+	gulp.watch(paths.project.watch.styles)
+		.on('add', gulp.parallel('styles'))
+		.on('change', gulp.parallel('styles'))
+		.on('unlink', gulp.parallel('styles'));
+
+	gulp.watch(paths.project.watch.fonts)
+		.on('add', gulp.series('clean', 'fonts'))
+		.on('change', gulp.series('clean', 'fonts'))
+		.on('unlink', gulp.series('clean', 'fonts'));
+
+	gulp.watch(paths.project.watch.images)
+		.on('add', gulp.series('clean', 'images'))
+		.on('change', gulp.series('clean', 'images'))
+		.on('unlink', gulp.series('clean', 'images'));
+});
+
+//------------------------------------------------------------ Other
+
 function handleErrors(e) {
-	gutil.log(e);
+	notifier.notify({
+		// icon: project.dest + '/favicon.png',
+		title: project.name + ': ' + e.name,
+		message: e.message,
+		sound: true,
+		open: e.file
+	});
 	this.end();
 }
 
-//------------------------------------------------------------ HTML
-gulp.task('html:build', () => {
-	gulp.src(paths.src.html)
-		.pipe(rigger().on('error', handleErrors))
-		.pipe(_if(isProduction, htmlmin(plugins.htmlmin).on('error', handleErrors)))
-		.pipe(size({showFiles: true}))
-		.pipe(gulp.dest(paths.dest.html))
-		.pipe(reload({stream: true}))
-})
+gulp.task('browserSync', () => browserSync(syncOptions));
 
-//------------------------------------------------------------ JS
-gulp.task('js:build', () => {
-	gulp.src(paths.src.js)
-		.pipe(rigger().on('error', handleErrors))
-		.pipe(_if(!isProduction, sourcemaps.init()))
-		.pipe(_if(isProduction, uglify(plugins.uglify).on('error', handleErrors)))
-		.pipe(_if(!isProduction, sourcemaps.write()))
-		.pipe(size({showFiles: true}))
-		.pipe(gulp.dest(paths.dest.js))
-		.pipe(reload({stream: true}))
-})
+gulp.task('clean', () => del(paths.clean));
 
-//------------------------------------------------------------ Styles
-gulp.task('styles:build', () => {
-	gulp.src(paths.src.styles)
-		.pipe(_if(!isProduction, sourcemaps.init()))
-		.pipe(sass(plugins.sass).on('error', handleErrors))
-		.pipe(_if(isProduction, postCSS(plugins.postCSS)))
-		.pipe(_if(!isProduction, sourcemaps.write()))
-		.pipe(size({showFiles: true}))
-		.pipe(gulp.dest(paths.dest.styles))
-		.pipe(reload({stream: true}))
-})
+gulp.task('general', gulp.parallel('html', 'fonts', 'styles', 'js'));
 
-//------------------------------------------------------------ Images
-// SVG
-gulp.task('images:svg', () => {
-	return gulp.src(paths.src.images.svg)
-		.pipe(_if(isProduction, svgmin(plugins.svgmin)))
-		.pipe(gulp.dest(paths.dest.images))
-})
+gulp.task('production', gulp.parallel('clean', 'general', 'images'));
 
-// JPG, JPEG, PNG
-gulp.task('images:basic', () => {
-	return gulp.src(paths.src.images.basic)
-		.pipe(_if(isProduction, tinypng()))
-		.pipe(gulp.dest(paths.dest.images))
-})
-
-gulp.task('images:build', ['images:svg', 'images:basic'])
-
-//------------------------------------------------------------ Fonts
-gulp.task('fonts:build', () => {
-	gulp.src(paths.src.fonts)
-		.pipe(gulp.dest(paths.dest.fonts))
-})
-
-//------------------------------------------------------------ General tasks
-gulp.task('watch', () => {
-	watch([paths.watch.html], (event, cb) => {
-		gulp.start('html:build')
-	})
-	watch([paths.watch.styles], (event, cb) => {
-		gulp.start('styles:build')
-	})
-	watch([paths.watch.js], (event, cb) => {
-		gulp.start('js:build')
-	})
-	watch([paths.watch.images], (event, cb) => {
-		gulp.start('images:build')
-	})
-	watch([paths.watch.fonts], (event, cb) => {
-		gulp.start('fonts:build')
-	})
-})
-
-gulp.task('build', (cb) => {
-	runSequence('clean', 'html:build', 'js:build', 'styles:build', 'fonts:build', 'images:build', cb)
-})
-
-gulp.task('default', (cb) => {
-	runSequence('build', 'browserSync', 'watch', cb)
-})
+gulp.task('default', gulp.series('browserSync', 'watch'));
