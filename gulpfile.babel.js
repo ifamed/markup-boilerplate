@@ -17,6 +17,10 @@ import uglify from 'gulp-uglify'
 import csso from 'postcss-csso'
 import notifier from 'node-notifier'
 import htmlmin from 'gulp-htmlmin'
+import svgSprite from 'gulp-svg-sprite'
+import spritesmith from 'gulp.spritesmith'
+import merge from 'merge-stream'
+import folders from 'gulp-folders'
 
 // ENV
 // util.env.production or util.env.prod
@@ -115,6 +119,12 @@ const paths = {
 			styles: `${project.dest}/assets/css/`,
 			fonts: `${project.dest}/assets/fonts/`,
 			images: `${project.dest}/images/`,
+			sprites: {
+				png: `${project.dest}/images/`,
+				svg: {
+					styles: `${project.src}/assets/scss/sprites/sprites-svg.scss`
+				}
+			}
 		},
 		src: {
 			html: `${project.src}/**/*.html`,
@@ -122,6 +132,17 @@ const paths = {
 			styles: `${project.src}/assets/scss/main.scss`,
 			fonts: `${project.src}/assets/fonts/**/*.*`,
 			images: `${project.src}/images/**/*.*`,
+			sprites: {
+				scss: `${project.src}/assets/scss/sprites/`,
+				png: {
+					images: `${project.src}/images/sprites`,
+					template: `${project.src}/assets/scss/sprites/tpl/sprites-png-template.handlebars`
+				},
+				svg: {
+					images: `${project.src}/images/sprites`,
+					template: `${project.src}/assets/scss/sprites/tpl/sprites-svg-template.scss`
+				},
+			}
 		},
 		watch: {
 			html: `${project.src}/**/*.html`,
@@ -129,6 +150,10 @@ const paths = {
 			styles: `${project.src}/assets/scss/**/*.scss`,
 			fonts: `${project.src}/assets/fonts/**/*.*`,
 			images: `${project.src}/images/**/*.*`,
+			sprites: {
+				png: `${project.src}/images/sprites/**/*.png`,
+				svg: `${project.src}/images/sprites/**/*.svg*`
+			}
 		}
 	},
 	clean: project.dest
@@ -187,18 +212,66 @@ gulp.task('fonts', () =>
 //------------------------------------------------------------ Images
 
 gulp.task('images:tinypng', () =>
-	gulp.src(`${project.src}/images/**/*.{jpg,jpeg,png}`)
+	gulp.src([`${project.src}/images/**/*.{jpg,jpeg,png}`, `!${project.src}/images/sprites`, `!${project.src}/images/sprites/**`])
 		.pipe(_if(util.env.production, tinypng()))
 		.pipe(gulp.dest(paths.project.build.images))
 );
 
 gulp.task('images:svg', () =>
-	gulp.src(`${project.src}/images/**/*.svg`)
+	gulp.src([`${project.src}/images/**/*.svg`, `!${project.src}/images/sprites`, `!${project.src}/images/sprites/**`])
 		.pipe(_if(util.env.production, svgmin(plugins.svgmin)))
 		.pipe(gulp.dest(paths.project.build.images))
 );
 
 gulp.task('images', gulp.parallel('images:tinypng', 'images:svg'));
+
+//------------------------------------------------------------ Sprites
+
+gulp.task('sprites-png', folders(paths.project.src.sprites.png.images, (folder) => {
+	const spriteData = gulp.src(`${paths.project.src.sprites.png.images}/${folder}/*.{png,jpg}`)
+		.pipe(buffer())
+		.pipe(spritesmith({
+			imgName: `sprites-${folder}.png`,
+			cssName: `sprites-${folder}.scss`,
+			cssFormat: 'scss',
+			algorithm: 'binary-tree',
+			padding: 10,
+			cssTemplate: paths.project.src.sprites.png.template,
+			cssVarMap: function(sprite) {
+				sprite.name = `${folder}-${sprite.name}`
+			}
+		}));
+	const imgStream = spriteData.img
+		.pipe(buffer())
+		.pipe(_if(util.env.production, tinypng()))
+		.pipe(gulp.dest(paths.project.build.sprites.png));
+	const cssStream = spriteData.css
+		.pipe(gulp.dest(paths.project.src.sprites.scss));
+	return merge(imgStream, cssStream);
+}));
+
+gulp.task('sprites-svg', () =>
+	gulp.src(paths.project.watch.sprites.svg)
+		.pipe(_if(util.env.production, svgmin()))
+		.pipe(svgSprite({
+			mode: {
+				variables: {mapname: 'icons'},
+				css: {
+					dest: './',
+					layout: 'horizontal',
+					sprite: `${project.dest}/images/sprites-svg.svg`,
+					bust: false,
+					render: {
+						scss: {
+							dest: paths.project.build.sprites.svg.styles,
+							template: paths.project.src.sprites.svg.template
+						}
+					}
+				}
+			}
+		}))
+		.pipe(gulp.dest('./'))
+);
 
 //------------------------------------------------------------ Watch
 
