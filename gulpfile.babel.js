@@ -33,8 +33,8 @@ util.env.development = util.env.development || util.env.dev;
 
 const project = {
 	name: 'markup-boilerplate',
-	src: './src/',
-	dest: './dest/'
+	src: './src',
+	dest: './dest'
 };
 
 const
