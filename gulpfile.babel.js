@@ -273,6 +273,8 @@ gulp.task('sprites-svg', () =>
 		.pipe(gulp.dest('./'))
 );
 
+gulp.task('sprites', gulp.parallel('sprites-png', 'sprites-svg'));
+
 //------------------------------------------------------------ Watch
 
 gulp.task('watch', () => {
@@ -323,4 +325,4 @@ gulp.task('general', gulp.parallel('html', 'fonts', 'styles', 'js'));
 
 gulp.task('production', gulp.parallel('clean', 'general', 'images'));
 
-gulp.task('default', gulp.series('browserSync', 'watch'));
+gulp.task('default', gulp.parallel('browserSync', 'watch'));
