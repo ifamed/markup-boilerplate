@@ -279,14 +279,14 @@ gulp.task('sprites', gulp.parallel('sprites-png', 'sprites-svg'));
 
 gulp.task('watch', () => {
 	gulp.watch(paths.project.watch.html)
-		.on('add', gulp.series('clean', 'html'))
-		.on('change', gulp.series('clean', 'html'))
-		.on('unlink', gulp.series('clean', 'html'));
+		.on('add', gulp.parallel('html'))
+		.on('change', gulp.parallel('html'))
+		.on('unlink', gulp.parallel('html'));
 
 	gulp.watch(paths.project.watch.js)
-		.on('add', gulp.series('clean', 'js'))
-		.on('change', gulp.series('clean', 'js'))
-		.on('unlink', gulp.series('clean', 'js'));
+		.on('add', gulp.parallel('js'))
+		.on('change', gulp.parallel('js'))
+		.on('unlink', gulp.parallel('js'));
 
 	gulp.watch(paths.project.watch.styles)
 		.on('add', gulp.parallel('styles'))
@@ -294,14 +294,14 @@ gulp.task('watch', () => {
 		.on('unlink', gulp.parallel('styles'));
 
 	gulp.watch(paths.project.watch.fonts)
-		.on('add', gulp.series('clean', 'fonts'))
-		.on('change', gulp.series('clean', 'fonts'))
-		.on('unlink', gulp.series('clean', 'fonts'));
+		.on('add', gulp.parallel('fonts'))
+		.on('change', gulp.parallel('fonts'))
+		.on('unlink', gulp.parallel('fonts'));
 
 	gulp.watch(paths.project.watch.images)
-		.on('add', gulp.series('clean', 'images'))
-		.on('change', gulp.series('clean', 'images'))
-		.on('unlink', gulp.series('clean', 'images'));
+		.on('add', gulp.parallel('images'))
+		.on('change', gulp.parallel('images'))
+		.on('unlink', gulp.parallel('images'));
 });
 
 //------------------------------------------------------------ Other
