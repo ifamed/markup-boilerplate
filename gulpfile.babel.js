@@ -105,7 +105,7 @@ const
         server: {
             baseDir: project.dest
         },
-        port: 9000,
+        port: 3000,
         files: [
             `${paths.project.build.html}**/*.html`,
             `${paths.project.build.js}${project.filenames.js}.js`,
