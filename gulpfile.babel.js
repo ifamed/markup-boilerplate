@@ -23,6 +23,9 @@ const easyImport = require('postcss-easy-import');
 const babel = require('gulp-babel');
 const argv = require('minimist')(process.argv.slice(2));
 const htmlmin = require('gulp-htmlmin');
+const newer = require('gulp-newer');
+const plumber = require('gulp-plumber');
+const debug = require('gulp-debug');
 const path = require('path');
 const fs = require('fs');
 
@@ -103,9 +106,13 @@ paths.clean = [
 const
     syncOptions = {
         server: {
-            baseDir: project.dest
+            baseDir: project.dest,
+            directory: false,
+            serveStaticOptions: {
+                extensions: ['html']
+            }
         },
-        port: 3000,
+        port: argv.port || 3000,
         files: [
             `${paths.project.build.html}**/*.html`,
             `${paths.project.build.js}${project.filenames.js}.js`,
@@ -121,11 +128,7 @@ const
         ghostMode: false,
         logLevel: 'info', // 'debug', 'info', 'silent', 'warn'
         logConnections: false,
-        logFileChanges: true,
-        timestamps: true,
-        injectChanges: true,
-        fileTimeout: 1000,
-        reloadDelay: 500
+        logFileChanges: true
     },
     plugins = {
         postCSS: {
@@ -133,7 +136,7 @@ const
                 easyImport(),
                 flexbugsFixes(),
                 autoprefixer({
-                    browsers: ['last 4 versions', '> 1%', 'ie >= 11', 'opera >= 23', 'android >= 4', 'ff >= 30', 'ios >= 8', 'safari >= 8'],
+                    browsers: ['last 4 versions'],
                     cascade: false
                 }),
                 csso(_if(argv.production, {comments: false}))
@@ -198,7 +201,9 @@ const
 
 //------------------------------------------------------------ HTML
 gulp.task('html', () =>
-    gulp.src(paths.project.src.html)
+    gulp.src(paths.project.src.html, {since: gulp.lastRun('html')})
+        .pipe(newer(paths.project.build.html))
+        .pipe(debug({title: 'html'}))
         .pipe(rigger().on('error', handleErrors))
         .pipe(_if(argv.production, htmlmin(plugins.htmlmin).on('error', handleErrors)))
         .pipe(size({showFiles: true, title: 'html'}))
@@ -210,7 +215,9 @@ gulp.task('html', () =>
 gulp.task('js', () => handleJS(paths.project.src.js, paths.project.build.js, 'js'));
 
 function handleJS(src, build, title) {
-    return gulp.src(src)
+    return gulp.src(src, {since: gulp.lastRun('js')})
+        .pipe(newer(build))
+        .pipe(debug({title: 'js'}))
         .pipe(rigger().on('error', handleErrors))
         .pipe(_if(argv.development, sourcemaps.init()))
         // .pipe(babel({
@@ -227,7 +234,8 @@ function handleJS(src, build, title) {
 gulp.task('styles', () => handleStyles(paths.project.src.styles, paths.project.build.styles, 'styles'));
 
 function handleStyles(src, build, title) {
-    return gulp.src(src)
+    return gulp.src(src, {since: gulp.lastRun('styles')})
+        .pipe(plumber({errorHandler: handleErrors}))
         .pipe(_if(argv.development, sourcemaps.init()))
         .pipe(sass({
             includePaths: [src],
@@ -235,7 +243,9 @@ function handleStyles(src, build, title) {
             precision: 5,
             sourceMap: argv.development,
             errLogToConsole: true
-        }).on('error', handleErrors))
+        }))
+        .pipe(newer(build))
+        .pipe(debug({title: 'styles'}))
         .pipe(_if(argv.production, postCSS(plugins.postCSS.production), postCSS(plugins.postCSS.development)))
         .pipe(_if(argv.development, sourcemaps.write()))
         .pipe(size({showFiles: true, title: title}))
@@ -245,26 +255,34 @@ function handleStyles(src, build, title) {
 //------------------------------------------------------------ Fonts
 
 gulp.task('fonts', () =>
-    gulp.src(paths.project.src.fonts)
+    gulp.src(paths.project.src.fonts, {since: gulp.lastRun('fonts')})
+        .pipe(newer(paths.project.build.fonts))
+        .pipe(debug({title: 'fonts'}))
         .pipe(gulp.dest(paths.project.build.fonts))
 );
 
 //------------------------------------------------------------ Images
 
 gulp.task('images:tinypng', () =>
-    gulp.src([`${project.src}/images/**/*.{jpg,jpeg,png}`, `!${project.src}/images/sprites`, `!${project.src}/images/sprites/**`])
+    gulp.src([`${project.src}/images/**/*.{jpg,jpeg,png}`, `!${project.src}/images/sprites`, `!${project.src}/images/sprites/**`], {since: gulp.lastRun('images:tinypng')})
+        .pipe(newer(paths.project.build.images))
+        .pipe(debug({title: 'images:tinypng'}))
         .pipe(_if(argv.production, tinypng()))
         .pipe(gulp.dest(paths.project.build.images))
 );
 
 gulp.task('images:svg', () =>
-    gulp.src([`${project.src}/images/**/*.svg`, `!${project.src}/images/sprites`, `!${project.src}/images/sprites/**`])
+    gulp.src([`${project.src}/images/**/*.svg`, `!${project.src}/images/sprites`, `!${project.src}/images/sprites/**`], {since: gulp.lastRun('images:svg')})
+        .pipe(newer(paths.project.build.images))
+        .pipe(debug({title: 'images:svg'}))
         .pipe(_if(argv.production, svgmin(plugins.svgmin)))
         .pipe(gulp.dest(paths.project.build.images))
 );
 
 gulp.task('images:other', () =>
-    gulp.src([`${project.src}/assets/images/**/*.gif`, `!${project.src}/assets/images/sprites`, `!${project.src}/assets/images/sprites/**`])
+    gulp.src([`${project.src}/assets/images/**/*.gif`, `!${project.src}/assets/images/sprites`, `!${project.src}/assets/images/sprites/**`], {since: gulp.lastRun('images:other')})
+        .pipe(newer(paths.project.build.images))
+        .pipe(debug({title: 'images:other'}))
         .pipe(gulp.dest(paths.project.build.images))
 );
 
@@ -274,7 +292,7 @@ gulp.task('images', gulp.parallel('images:tinypng', 'images:svg', 'images:other'
 
 gulp.task('sprites-png', folders(paths.project.src.sprites.png.images, (folder) => {
     let spritesPositions = [];
-    const spriteData = gulp.src(`${paths.project.src.sprites.png.images}/${folder}/*.{png,jpg}`)
+    const spriteData = gulp.src(`${paths.project.src.sprites.png.images}/${folder}/*.{png,jpg}`, {since: gulp.lastRun('sprites-png')})
         .pipe(buffer())
         .pipe(spritesmith({
             imgName: `sprites-${folder}.png`,
@@ -291,6 +309,8 @@ gulp.task('sprites-png', folders(paths.project.src.sprites.png.images, (folder) 
         }));
     const imgStream = spriteData.img
         .pipe(buffer())
+        .pipe(newer(paths.project.build.sprites.png))
+        .pipe(debug({title: 'sprites-png'}))
         .pipe(_if(argv.production, tinypng()))
         .pipe(gulp.dest(paths.project.build.sprites.png));
     const cssStream = spriteData.css
@@ -300,7 +320,7 @@ gulp.task('sprites-png', folders(paths.project.src.sprites.png.images, (folder) 
 }));
 
 gulp.task('sprites-svg', () =>
-    gulp.src(paths.project.watch.sprites.svg)
+    gulp.src(paths.project.watch.sprites.svg, {since: gulp.lastRun('sprites-svg')})
         .pipe(_if(argv.production, svgmin()))
         .pipe(svgSprite({
             mode: {
@@ -319,6 +339,8 @@ gulp.task('sprites-svg', () =>
                 }
             }
         }))
+        .pipe(newer('./'))
+        .pipe(debug({title: 'sprites-svg'}))
         .pipe(gulp.dest('./'))
 );
 
@@ -356,6 +378,7 @@ gulp.task('watch', () => {
 //------------------------------------------------------------ Other
 
 function handleErrors(e) {
+    console.error(e.message);
     notifier.notify({
         // icon: './logo.png',
         title: project.name + ': ' + e.name,
@@ -372,4 +395,4 @@ gulp.task('clean', () => del(paths.clean));
 
 gulp.task('build', gulp.series('clean', 'html', 'fonts', 'styles', 'js', 'images', 'sprites'));
 
-gulp.task('default', gulp.parallel('browserSync', 'watch'));
+gulp.task('default', gulp.series('build', gulp.parallel('browserSync', 'watch')));

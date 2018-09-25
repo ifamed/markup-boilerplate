@@ -18,9 +18,12 @@
     "gulp": "^4.0.0",
     "gulp-babel": "^8.0.0",
     "gulp-cli": "^2.0.1",
-    "gulp-htmlmin": "^5.0.1",
     "gulp-folders": "^1.1.0",
+    "gulp-htmlmin": "^5.0.1",
     "gulp-if": "^2.0.2",
+    "gulp-newer": "^1.4.0",
+    "gulp-plumber": "^1.2.0",
+    "gulp-debug": "^4.0.0",
     "gulp-postcss": "^8.0.0",
     "gulp-rigger": "^0.5.8",
     "gulp-sass": "^4.0.1",
@@ -37,5 +40,9 @@
     "postcss-easy-import": "^3.0.0",
     "postcss-flexbugs-fixes": "^4.1.0",
     "vinyl-buffer": "^1.0.1"
+  },
+  "dependencies": {
+    "gsap": "^2.0.2",
+    "jquery": "^3.3.1"
   }
 }
