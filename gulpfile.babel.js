@@ -360,7 +360,7 @@ gulp.task('watch', () => {
     gulp.watch(paths.project.watch.html)
         .on('add', gulp.parallel('html'))
         .on('change', gulp.parallel('html'))
-        .on('unlink', gulp.parallel('html'));
+        .on('unlink', (e) => del(e.replace(project.src.slice(2), project.dest.slice(2))));
 
     gulp.watch(paths.project.watch.js)
         .on('add', gulp.parallel('js'))
@@ -375,12 +375,12 @@ gulp.task('watch', () => {
     gulp.watch(paths.project.watch.fonts)
         .on('add', gulp.parallel('fonts'))
         .on('change', gulp.parallel('fonts'))
-        .on('unlink', gulp.parallel('fonts'));
+        .on('unlink', (e) => del(e.replace(project.src.slice(2), project.dest.slice(2))));
 
     gulp.watch(paths.project.watch.images)
         .on('add', gulp.parallel('images'))
         .on('change', gulp.parallel('images'))
-        .on('unlink', gulp.parallel('images'));
+        .on('unlink', (e) => del(e.replace(project.src.slice(2), project.dest.slice(2))));
 });
 
 //------------------------------------------------------------ Other
