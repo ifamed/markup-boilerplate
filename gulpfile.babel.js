@@ -202,10 +202,11 @@ const
 //------------------------------------------------------------ HTML
 gulp.task('html', () =>
     gulp.src(paths.project.src.html, {since: gulp.lastRun('html')})
+        .pipe(plumber({errorHandler: handleErrors}))
         .pipe(newer(paths.project.build.html))
         .pipe(debug({title: 'html'}))
-        .pipe(rigger().on('error', handleErrors))
-        .pipe(_if(argv.production, htmlmin(plugins.htmlmin).on('error', handleErrors)))
+        .pipe(rigger())
+        .pipe(_if(argv.production, htmlmin(plugins.htmlmin)))
         .pipe(size({showFiles: true, title: 'html'}))
         .pipe(gulp.dest(paths.project.build.html))
 );
@@ -216,14 +217,15 @@ gulp.task('js', () => handleJS(paths.project.src.js, paths.project.build.js, 'js
 
 function handleJS(src, build, title) {
     return gulp.src(src, {since: gulp.lastRun('js')})
+        .pipe(plumber({errorHandler: handleErrors}))
         .pipe(newer(build))
         .pipe(debug({title: 'js'}))
-        .pipe(rigger().on('error', handleErrors))
+        .pipe(rigger())
         .pipe(_if(argv.development, sourcemaps.init()))
         // .pipe(babel({
         //     presets: ['@babel/preset-env']
         // }))
-        .pipe(_if(argv.production, uglify(plugins.uglify).on('error', handleErrors)))
+        .pipe(_if(argv.production, uglify(plugins.uglify)))
         .pipe(_if(argv.development, sourcemaps.write()))
         .pipe(size({showFiles: true, title: title}))
         .pipe(gulp.dest(build));
@@ -256,6 +258,7 @@ function handleStyles(src, build, title) {
 
 gulp.task('fonts', () =>
     gulp.src(paths.project.src.fonts, {since: gulp.lastRun('fonts')})
+        .pipe(plumber({errorHandler: handleErrors}))
         .pipe(newer(paths.project.build.fonts))
         .pipe(debug({title: 'fonts'}))
         .pipe(gulp.dest(paths.project.build.fonts))
@@ -265,6 +268,7 @@ gulp.task('fonts', () =>
 
 gulp.task('images:tinypng', () =>
     gulp.src([`${project.src}/images/**/*.{jpg,jpeg,png}`, `!${project.src}/images/sprites`, `!${project.src}/images/sprites/**`], {since: gulp.lastRun('images:tinypng')})
+        .pipe(plumber({errorHandler: handleErrors}))
         .pipe(newer(paths.project.build.images))
         .pipe(debug({title: 'images:tinypng'}))
         .pipe(_if(argv.production, tinypng()))
@@ -273,6 +277,7 @@ gulp.task('images:tinypng', () =>
 
 gulp.task('images:svg', () =>
     gulp.src([`${project.src}/images/**/*.svg`, `!${project.src}/images/sprites`, `!${project.src}/images/sprites/**`], {since: gulp.lastRun('images:svg')})
+        .pipe(plumber({errorHandler: handleErrors}))
         .pipe(newer(paths.project.build.images))
         .pipe(debug({title: 'images:svg'}))
         .pipe(_if(argv.production, svgmin(plugins.svgmin)))
@@ -281,6 +286,7 @@ gulp.task('images:svg', () =>
 
 gulp.task('images:other', () =>
     gulp.src([`${project.src}/assets/images/**/*.gif`, `!${project.src}/assets/images/sprites`, `!${project.src}/assets/images/sprites/**`], {since: gulp.lastRun('images:other')})
+        .pipe(plumber({errorHandler: handleErrors}))
         .pipe(newer(paths.project.build.images))
         .pipe(debug({title: 'images:other'}))
         .pipe(gulp.dest(paths.project.build.images))
@@ -293,6 +299,7 @@ gulp.task('images', gulp.parallel('images:tinypng', 'images:svg', 'images:other'
 gulp.task('sprites-png', folders(paths.project.src.sprites.png.images, (folder) => {
     let spritesPositions = [];
     const spriteData = gulp.src(`${paths.project.src.sprites.png.images}/${folder}/*.{png,jpg}`, {since: gulp.lastRun('sprites-png')})
+        .pipe(plumber({errorHandler: handleErrors}))
         .pipe(buffer())
         .pipe(spritesmith({
             imgName: `sprites-${folder}.png`,
@@ -321,6 +328,7 @@ gulp.task('sprites-png', folders(paths.project.src.sprites.png.images, (folder) 
 
 gulp.task('sprites-svg', () =>
     gulp.src(paths.project.watch.sprites.svg, {since: gulp.lastRun('sprites-svg')})
+        .pipe(plumber({errorHandler: handleErrors}))
         .pipe(_if(argv.production, svgmin()))
         .pipe(svgSprite({
             mode: {
